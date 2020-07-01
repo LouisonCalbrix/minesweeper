@@ -37,28 +37,26 @@ let posIn = function(array, pos) {
 /////////////////////////////////////////////////////////////Minefield
 
 // TODO: 
-// * random bombs
-// * first position is not a bomb!
+// * reveal
+// * graphic interface to see the result and ease testing
 let Minefield = function(width, height, pos, nbBombs) {
-    this.nbBombs = nbBombs;
+    this.gameOver = false;
 
+    this.nbBombs = nbBombs;
     this.width = width;
     this.height = height;
-    this.size = width * height;
 
     this.array = new Array(height);
     for (let i=0; i<height; i++) {
         this.array[i] = new Array(width).fill(0);
     }
+    this.view = new Array();
 
-    console.log(pos);
     // randomly pick nbBombs position where bombs will be located
     let bombArray = new Array();
     while (bombArray.length!==nbBombs) {
         [posX, posY] = [randInt(width), randInt(height)];
-        console.log([posX, posY]);
         if (!eqPos([posX, posY], pos) && !posIn(bombArray, [posX, posY])) {
-            console.log('adding bomb');
             this.array[posY][posX] = 'X';
             bombArray.push([posX, posY]);
         }
@@ -75,6 +73,45 @@ let Minefield = function(width, height, pos, nbBombs) {
             }
         }
     }
+}
+
+Minefield.prototype.reveal = function(pos) {
+    if (!this.gameOver) {
+        let [posX, posY] = pos;
+        if (this.array[posY][posX]==='X') {
+            this.view.push(pos);
+            this.gameOver = true;
+        }
+        else if (!posIn(this.view, pos)) {
+            this.view.push(pos);
+            if (this.array[posY][posX]===0) {
+                for (let i=-1; i<2; i++) {
+                    for (let j=-1; j<2; j++) {
+                        if (j!==0 || i!==0) {
+                            if (posX+i>=0 && posX+i<this.width && posY+j>=0 && posY+j<this.height)
+                                this.reveal([posX+i, posY+j]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+Minefield.prototype.print = function() {
+    let stringRep = '';
+    for (let y=0; y<this.array.length; y++) {
+        for (let x=0; x<this.array[y].length; x++) {
+            if (posIn(this.view, [x, y])) {
+                stringRep += this.array[y][x];
+            }
+            else {
+                stringRep += '.';
+            }
+        }
+        stringRep += '\n';
+    }
+    console.log(stringRep);
 }
 
 const difficulties = [
