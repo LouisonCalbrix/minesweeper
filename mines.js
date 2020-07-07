@@ -37,7 +37,6 @@ let posIn = function(array, pos) {
 /////////////////////////////////////////////////////////////Minefield
 
 // TODO: 
-// * reveal
 // * graphic interface to see the result and ease testing
 let Minefield = function(width, height, pos, nbBombs) {
     this.gameOver = false;
@@ -55,7 +54,7 @@ let Minefield = function(width, height, pos, nbBombs) {
     // randomly pick nbBombs position where bombs will be located
     let bombArray = new Array();
     while (bombArray.length!==nbBombs) {
-        [posX, posY] = [randInt(width), randInt(height)];
+        let [posX, posY] = [randInt(width), randInt(height)];
         if (!eqPos([posX, posY], pos) && !posIn(bombArray, [posX, posY])) {
             this.array[posY][posX] = 'X';
             bombArray.push([posX, posY]);
@@ -112,6 +111,7 @@ Minefield.prototype.print = function() {
         stringRep += '\n';
     }
     console.log(stringRep);
+    return stringRep;
 }
 
 const difficulties = [
@@ -120,19 +120,35 @@ const difficulties = [
     [16, 30, 99]
 ];
 
-/////////////////////////////////////////////////////////////////Proxy
+/////////////////////////////////////////////////////////Visualization
 
-const handlerArray = {
-    get: function(obj, prop) {
-        if (isNaN(prop))
-            return obj[prop];
-        return obj.array[prop];
+const gameSec = document.querySelector('#game-section');
+
+let clickTile = function(pos, minefield) {
+    console.log('clikTile');
+    minefield.reveal(pos);
+    minefield.print();
+}
+
+// create a graphical interface for minefield using html elements
+let initInterface = function(minefield) {
+    // remove previously created interface
+    for (let node of gameSec.childNodes)
+        gameSec.removeChild(node);
+    for (let row=0; row<minefield.height; row++) {
+        let divRow = document.createElement('div');
+        divRow.classList.add('row');
+        gameSec.appendChild(divRow);
+        for (let column=0; column<minefield.array[row].length; column++) {
+            let divTile = document.createElement('div');
+            divTile.classList.add('tile');
+            divTile.addEventListener('click', event => clickTile([column, row], minefield));
+            divRow.appendChild(divTile);
+        }
     }
 }
 
-const ProxyArray = grid => new Proxy(grid, handlerArray);
-
 //////////////////////////////////////////////////////////////////Test
 
-let gridA = new Minefield(9, 9, [2, 2], 10);
-const proxyArray = ProxyArray(gridA);
+let gridA = new Minefield(5, 9, [2, 2], 10);
+initInterface(gridA);
