@@ -2,6 +2,8 @@
 // July 2020
 // Minesweeper game in plain javascript
 
+// TODO: debug refreshInterface and/or css (graphic feedback is messed up).
+
 
 
 // Return random integer between lowerbound and upperbound (upperbound not included)
@@ -36,8 +38,6 @@ let posIn = function(array, pos) {
 
 /////////////////////////////////////////////////////////////Minefield
 
-// TODO: 
-// * graphic interface to see the result and ease testing
 let Minefield = function(width, height, pos, nbBombs) {
     this.gameOver = false;
 
@@ -123,28 +123,44 @@ const difficulties = [
 /////////////////////////////////////////////////////////Visualization
 
 const gameSec = document.querySelector('#game-section');
+let arrayTiles = [];
 
+// callback function for when a tile is clicked
 let clickTile = function(pos, minefield) {
     console.log('clikTile');
     minefield.reveal(pos);
+    refreshInterface(minefield);
     minefield.print();
 }
 
 // create a graphical interface for minefield using html elements
 let initInterface = function(minefield) {
     // remove previously created interface
-    for (let node of gameSec.childNodes)
-        gameSec.removeChild(node);
+    let children = gameSec.childNodes;
+    while (gameSec.childElementCount>0)
+        gameSec.removeChild(children[0]);
+    arrayTiles = [];
     for (let row=0; row<minefield.height; row++) {
         let divRow = document.createElement('div');
         divRow.classList.add('row');
         gameSec.appendChild(divRow);
+        let rowTiles = [];
         for (let column=0; column<minefield.array[row].length; column++) {
             let divTile = document.createElement('div');
             divTile.classList.add('tile');
             divTile.addEventListener('click', event => clickTile([column, row], minefield));
             divRow.appendChild(divTile);
+            rowTiles.push(divTile);
         }
+        arrayTiles.push(rowTiles);
+    }
+}
+
+// give user graphic feedback of the minefield state
+let refreshInterface = function(minefield) {
+    for (let [posX, posY] of minefield.view) {
+        console.log(minefield.array[posY][posX]);
+        arrayTiles[posY][posX].innerText = minefield.array[posY][posX];
     }
 }
 
