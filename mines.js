@@ -161,9 +161,15 @@ let initInterface = function(minefield) {
 
 // give user graphic feedback of the minefield state
 let refreshInterface = function(minefield) {
+    let strRows = minefield.toString().split('\n');
+    for (let y=0; y<strRows.length; y++) {
+        for (let x=0; x<strRows[y].length; x++) {
+            arrayTiles[y][x].innerText = strRows[y][x];
+        }
+    }
 }
 
 //////////////////////////////////////////////////////////////////Test
 
-let gridA = new Minefield(5, 9, [2, 2], 10);
+let gridA = new Minefield(9, 9, [2, 2], 10);
 initInterface(gridA);
