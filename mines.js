@@ -97,7 +97,7 @@ Minefield.prototype.reveal = function(pos) {
     }
 }
 
-Minefield.prototype.print = function() {
+Minefield.prototype.toString = function() {
     let stringRep = '';
     for (let y=0; y<this.array.length; y++) {
         for (let x=0; x<this.array[y].length; x++) {
@@ -110,8 +110,11 @@ Minefield.prototype.print = function() {
         }
         stringRep += '\n';
     }
-    console.log(stringRep);
     return stringRep;
+}
+
+Minefield.prototype.print = function() {
+    console.log(this.toString());
 }
 
 const difficulties = [
@@ -158,10 +161,6 @@ let initInterface = function(minefield) {
 
 // give user graphic feedback of the minefield state
 let refreshInterface = function(minefield) {
-    for (let [posX, posY] of minefield.view) {
-        console.log(minefield.array[posY][posX]);
-        arrayTiles[posY][posX].innerText = minefield.array[posY][posX];
-    }
 }
 
 //////////////////////////////////////////////////////////////////Test
