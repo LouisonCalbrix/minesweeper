@@ -5,6 +5,7 @@ html {
   box-sizing: inherit;
 }
 body {
+  font-family: Helvetica, Arial;
   margin: 0;
 }
 .row {
@@ -17,6 +18,7 @@ body {
 
 .tile {
   border: .2em solid lime;
+  color: lime;
   background-color: black;
   padding: .2em;
   display: inline-block;
