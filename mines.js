@@ -2,8 +2,6 @@
 // July 2020
 // Minesweeper game in plain javascript
 
-// TODO: debug refreshInterface and/or css (graphic feedback is messed up).
-
 
 
 // Return random integer between lowerbound and upperbound (upperbound not included)
@@ -129,29 +127,32 @@ const gameSec = document.querySelector('#game-section');
 let arrayTiles = [];
 
 // callback function for when a tile is clicked
-let clickTile = function(pos, minefield) {
-    console.log('clikTile');
+let clickTile = function(pos) {
+    if (!clicked) {
+        clicked = true;
+        minefield = new Minefield(cols, rows, pos, bombs);
+    }
     minefield.reveal(pos);
     refreshInterface(minefield);
     minefield.print();
 }
 
 // create a graphical interface for minefield using html elements
-let initInterface = function(minefield) {
+let initInterface = function(nbRows, nbCols) {
     // remove previously created interface
     let children = gameSec.childNodes;
     while (gameSec.childElementCount>0)
         gameSec.removeChild(children[0]);
     arrayTiles = [];
-    for (let row=0; row<minefield.height; row++) {
+    for (let row=0; row<nbRows; row++) {
         let divRow = document.createElement('div');
         divRow.classList.add('row');
         gameSec.appendChild(divRow);
         let rowTiles = [];
-        for (let column=0; column<minefield.array[row].length; column++) {
+        for (let column=0; column<nbCols; column++) {
             let divTile = document.createElement('div');
             divTile.classList.add('tile');
-            divTile.addEventListener('click', event => clickTile([column, row], minefield));
+            divTile.addEventListener('click', event => clickTile([column, row]));
             divRow.appendChild(divTile);
             rowTiles.push(divTile);
         }
@@ -169,7 +170,29 @@ let refreshInterface = function(minefield) {
     }
 }
 
+/////////////////////////////////////////////////////////HTML controls
+
+let initGame = function(event) {
+    rows = Number(rowRange.value);
+    cols = Number(colRange.value);
+    bombs = Number(bombRange.value);
+    if (bombs<=rows*cols/2) {
+        initInterface(rows, cols);
+    }
+    clicked = false;
+}
+
+const rowRange = document.querySelector('#rows');
+const colRange = document.querySelector('#cols');
+const bombRange = document.querySelector('#bombs');
+const playButton = document.querySelector('#play');
+playButton.addEventListener('click', initGame)
+
+let rows = 0;
+let cols = 0;
+let bombs = 0;
+let clicked = false;
+
 //////////////////////////////////////////////////////////////////Test
 
-let gridA = new Minefield(9, 9, [2, 2], 10);
-initInterface(gridA);
+var minefield;
