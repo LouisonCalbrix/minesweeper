@@ -44,10 +44,11 @@ let Minefield = function(width, height, pos, nbBombs) {
     this.height = height;
 
     this.array = new Array(height);
+    this.view = new Array(height);
     for (let i=0; i<height; i++) {
         this.array[i] = new Array(width).fill(0);
+        this.view[i] = new Array(width).fill('.');
     }
-    this.view = new Array();
 
     // randomly pick nbBombs position where bombs will be located
     let bombArray = new Array();
@@ -76,11 +77,11 @@ Minefield.prototype.reveal = function(pos) {
     if (!this.gameOver) {
         let [posX, posY] = pos;
         if (this.array[posY][posX]==='X') {
-            this.view.push(pos);
+            this.view[posY][posX] = this.array[posY][posX];
             this.gameOver = true;
         }
-        else if (!posIn(this.view, pos)) {
-            this.view.push(pos);
+        else if (this.view[posY][posX]==='.') {
+            this.view[posY][posX] = this.array[posY][posX];
             if (this.array[posY][posX]===0) {
                 for (let i=-1; i<2; i++) {
                     for (let j=-1; j<2; j++) {
@@ -95,19 +96,17 @@ Minefield.prototype.reveal = function(pos) {
     }
 }
 
+Minefield.prototype.flag = function(pos) {
+    let [posX, posY] = pos;
+    if (this.view[posY][posX]==='.') 
+        this.view[posY][posX] = 'P';
+    else if (this.view[posY][posX]==='P')
+        this.view[posY][posX] = '.';
+}
+
 Minefield.prototype.toString = function() {
     let stringRep = '';
-    for (let y=0; y<this.array.length; y++) {
-        for (let x=0; x<this.array[y].length; x++) {
-            if (posIn(this.view, [x, y])) {
-                stringRep += this.array[y][x];
-            }
-            else {
-                stringRep += '.';
-            }
-        }
-        stringRep += '\n';
-    }
+    stringRep = this.view.map(row => row.join('')).join('\n');
     return stringRep;
 }
 
@@ -127,14 +126,27 @@ const gameSec = document.querySelector('#game-section');
 let arrayTiles = [];
 
 // callback function for when a tile is clicked
-let clickTile = function(pos) {
+let clickTile = function(event, pos) {
+    console.log(event.button);
     if (!clicked) {
         clicked = true;
         minefield = new Minefield(cols, rows, pos, bombs);
+        minefield.reveal(pos);
     }
-    minefield.reveal(pos);
+    else if (event.button === 0) 
+        minefield.reveal(pos);
     refreshInterface(minefield);
     minefield.print();
+}
+
+// callback function for when user right clicks on a tile
+let flagTile = function(event, pos) {
+    if (clicked) {
+        event.preventDefault();
+        console.log('flag');
+        minefield.flag(pos);
+    }
+    refreshInterface(minefield);
 }
 
 // create a graphical interface for minefield using html elements
@@ -152,7 +164,8 @@ let initInterface = function(nbRows, nbCols) {
         for (let column=0; column<nbCols; column++) {
             let divTile = document.createElement('div');
             divTile.classList.add('tile');
-            divTile.addEventListener('click', event => clickTile([column, row]));
+            divTile.addEventListener('click', event => clickTile(event, [column, row]));
+            divTile.addEventListener('contextmenu', event => flagTile(event, [column, row]));
             divRow.appendChild(divTile);
             rowTiles.push(divTile);
         }
@@ -172,6 +185,12 @@ let refreshInterface = function(minefield) {
 
 /////////////////////////////////////////////////////////HTML controls
 
+let refreshLabel = function(event) {
+    let id = event.target.id;
+    let label = document.querySelector(`label[for=${ id }]`);
+    label.innerText = label.innerText.replace(/\s?\d*$/, ` ${ event.target.value }`);
+}
+
 let initGame = function(event) {
     rows = Number(rowRange.value);
     cols = Number(colRange.value);
@@ -185,6 +204,8 @@ let initGame = function(event) {
 const rowRange = document.querySelector('#rows');
 const colRange = document.querySelector('#cols');
 const bombRange = document.querySelector('#bombs');
+for (let range of [rowRange, colRange, bombRange]) 
+    range.addEventListener('input', refreshLabel);
 const playButton = document.querySelector('#play');
 playButton.addEventListener('click', initGame)
 
