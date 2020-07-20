@@ -194,10 +194,10 @@ let refreshLabel = function(event) {
 let initGame = function(event) {
     rows = Number(rowRange.value);
     cols = Number(colRange.value);
-    bombs = Number(bombRange.value);
-    if (bombs<=rows*cols/2) {
-        initInterface(rows, cols);
-    }
+    bombs = Math.floor((Number(bombRange.value) / 100) * Number(rowRange.value) * Number(colRange.value));
+    console.log(rows * cols);
+    console.log(bombs);
+    initInterface(rows, cols);
     clicked = false;
 }
 
@@ -211,7 +211,7 @@ playButton.addEventListener('click', initGame)
 
 let rows = 0;
 let cols = 0;
-let bombs = 0;
+let bombs = 10;
 let clicked = false;
 
 //////////////////////////////////////////////////////////////////Test
