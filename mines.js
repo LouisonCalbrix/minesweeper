@@ -40,6 +40,7 @@ let Minefield = function(width, height, pos, nbBombs) {
     this.gameOver = false;
 
     this.nbBombs = nbBombs;
+    this.nbFlags = 0;
     this.width = width;
     this.height = height;
 
@@ -98,10 +99,30 @@ Minefield.prototype.reveal = function(pos) {
 
 Minefield.prototype.flag = function(pos) {
     let [posX, posY] = pos;
-    if (this.view[posY][posX]==='.') 
+    if (this.view[posY][posX]==='.') {
+        this.nbFlags++;
         this.view[posY][posX] = 'P';
-    else if (this.view[posY][posX]==='P')
+        return this.checkWin();
+    }
+    else if (this.view[posY][posX]==='P') {
+        this.nbFlags--;
         this.view[posY][posX] = '.';
+    }
+    return false;
+}
+
+Minefield.prototype.checkWin = function() {
+    if (this.nbFlags!==this.nbBombs)
+        return false;
+    for (let row=0; row<this.array.length; row++) {
+        for (let col=0; col<this.array[row].length; col++) {
+            if ((this.array[row][col]==='X' && this.view[row][col]!=='P') || 
+                (this.view[row][col]==='P' && this.array[row][col]!=='X'))
+                return false;
+        }
+    }
+    this.gameOver = true;
+    return true;
 }
 
 Minefield.prototype.toString = function() {
@@ -195,8 +216,6 @@ let initGame = function(event) {
     rows = Number(rowRange.value);
     cols = Number(colRange.value);
     bombs = Math.floor((Number(bombRange.value) / 100) * Number(rowRange.value) * Number(colRange.value));
-    console.log(rows * cols);
-    console.log(bombs);
     initInterface(rows, cols);
     clicked = false;
 }
