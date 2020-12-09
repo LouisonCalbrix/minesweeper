@@ -1,25 +1,36 @@
-// Louison Calbrix
-// July 2020
-// Minesweeper game in plain javascript
+/* Louison Calbrix
+ * July 2020
+ * Minesweeper game in plain javascript
+ * This file provides a function for building minesweeper game grid. It is 
+ * possible to play a game of minesweeper with only the content of that file 
+ * but that would be inside a javascript console, and would require the user
+ * to know the functions of the Minesweeper prototype (probably not the best
+ * experience there is).
+ */
 
+'use strict';
 
+/* Auxiliary/helper functions:
+ * These functions are not strictly related to the Minesweeper game and are not
+ * meant to be used outside this file.
+ */
 
 // Return random integer between lowerbound and upperbound (upperbound not included)
-const randInt = function(lowerbound, upperbound=0) {
-    if (upperbound===0)                       // function used with one argument
+const randInt = function(lowerbound, upperbound=undefined) {
+    if (upperbound===undefined)                   // function used with one argument
         return Math.floor(Math.random() * lowerbound);
 
-    let range = upperbound - lowerbound;
+    const range = upperbound - lowerbound;
     if (range<=0)
         throw new Error(`randInt: lowerbound (${ lowerbound }) should be less than upperbound (${ upperbound }).`);
 
     return lowerbound + Math.floor(Math.random() * range);
 }
 
-/* compare two positions
+/* Return true if posA and posB are equal
  * positions should be array-like objects containing coordinates for different axes
  */
-let eqPos = function(posA, posB) {
+const eqPos = function(posA, posB) {
     if (posA.length!==posB.length)
         throw new Error(`eqPos: ${ posA } and ${ posB } have different lengths.`);
     for (let i=0; i<posA.length; i++) {
@@ -29,210 +40,166 @@ let eqPos = function(posA, posB) {
     return true;
 }
 
-// return true if any position in array is equal to pos
-let posIn = function(array, pos) {
+// Return true if any position in array is equal to pos
+const posIn = function(array, pos) {
     return array.some(position => eqPos(position, pos));
 }
 
-/////////////////////////////////////////////////////////////Minefield
 
-let Minefield = function(width, height, pos, nbBombs) {
-    this.gameOver = false;
+//-----------------------------------------------------------Minefield
 
-    this.nbBombs = nbBombs;
-    this.nbFlags = 0;
-    this.width = width;
-    this.height = height;
-
-    this.array = new Array(height);
-    this.view = new Array(height);
-    for (let i=0; i<height; i++) {
-        this.array[i] = new Array(width).fill(0);
-        this.view[i] = new Array(width).fill('.');
-    }
-
-    // randomly pick nbBombs position where bombs will be located
-    let bombArray = new Array();
-    while (bombArray.length!==nbBombs) {
-        let [posX, posY] = [randInt(width), randInt(height)];
-        if (!eqPos([posX, posY], pos) && !posIn(bombArray, [posX, posY])) {
-            this.array[posY][posX] = 'X';
-            bombArray.push([posX, posY]);
-        }
-    }
-
-    // for each bomb add one to all neighboors
-    for (let [posX, posY] of bombArray) {
-        for (let i=-1; i<2; i++) {
-            for (let j=-1; j<2; j++) {
-                if (j!==0 || i!==0) {
-                    if (posX+i>=0 && posX+i<width && posY+j>=0 && posY+j<height)
-                        this.array[posY+j][posX+i]!=='X' ? this.array[posY+j][posX+i]++ : 0;
-                }
-            }
-        }
-    }
-}
-
-Minefield.prototype.reveal = function(pos) {
-    if (!this.gameOver) {
-        let [posX, posY] = pos;
-        if (this.array[posY][posX]==='X') {
-            this.view[posY][posX] = this.array[posY][posX];
-            this.gameOver = true;
-        }
-        else if (this.view[posY][posX]==='.') {
-            this.view[posY][posX] = this.array[posY][posX];
-            if (this.array[posY][posX]===0) {
-                for (let i=-1; i<2; i++) {
-                    for (let j=-1; j<2; j++) {
-                        if (j!==0 || i!==0) {
-                            if (posX+i>=0 && posX+i<this.width && posY+j>=0 && posY+j<this.height)
-                                this.reveal([posX+i, posY+j]);
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-Minefield.prototype.flag = function(pos) {
-    let [posX, posY] = pos;
-    if (this.view[posY][posX]==='.') {
-        this.nbFlags++;
-        this.view[posY][posX] = 'P';
-        return this.checkWin();
-    }
-    else if (this.view[posY][posX]==='P') {
-        this.nbFlags--;
-        this.view[posY][posX] = '.';
-    }
-    return false;
-}
-
-Minefield.prototype.checkWin = function() {
-    if (this.nbFlags!==this.nbBombs)
-        return false;
-    for (let row=0; row<this.array.length; row++) {
-        for (let col=0; col<this.array[row].length; col++) {
-            if ((this.array[row][col]==='X' && this.view[row][col]!=='P') || 
-                (this.view[row][col]==='P' && this.array[row][col]!=='X'))
-                return false;
-        }
-    }
-    this.gameOver = true;
-    return true;
-}
-
-Minefield.prototype.toString = function() {
-    let stringRep = '';
-    stringRep = this.view.map(row => row.join('')).join('\n');
-    return stringRep;
-}
-
-Minefield.prototype.print = function() {
-    console.log(this.toString());
-}
-
+// default difficulties
 const difficulties = [
     [9, 9, 10],
     [14, 16, 40],
     [16, 30, 99]
 ];
 
-/////////////////////////////////////////////////////////Visualization
+// Special character used to represent flags, bombs and unrevealed positions
+const BOMB = 'X';
+const FLAG = 'P';
+const UNREV = '.';
+const EMPTY = ' ';
 
-const gameSec = document.querySelector('#game-section');
-let arrayTiles = [];
+// Values to represent the state of the current game: lost, playing, won
+const PLAYING = 'pl';
+const LOST = 'lo';
+const WON = 'wo';
 
-// callback function for when a tile is clicked
-let clickTile = function(event, pos) {
-    console.log(event.button);
-    if (!clicked) {
-        clicked = true;
-        minefield = new Minefield(cols, rows, pos, bombs);
-        minefield.reveal(pos);
+// Constructor
+const Minefield = function(width, height, pos, nbBombs) {
+    this.state = PLAYING
+
+    this.nbBombs = nbBombs;
+    this.nbFlags = 0;
+    this.width = width;
+    this.height = height;
+
+    this.bombs = new Array(height);
+    this.view = new Array(height);
+    for (let i=0; i<height; i++) {
+        this.bombs[i] = new Array(width).fill(0);
+        this.view[i] = new Array(width).fill(UNREV);
     }
-    else if (event.button === 0) 
-        minefield.reveal(pos);
-    refreshInterface(minefield);
-    minefield.print();
-}
 
-// callback function for when user right clicks on a tile
-let flagTile = function(event, pos) {
-    if (clicked) {
-        event.preventDefault();
-        console.log('flag');
-        minefield.flag(pos);
-    }
-    refreshInterface(minefield);
-}
-
-// create a graphical interface for minefield using html elements
-let initInterface = function(nbRows, nbCols) {
-    // remove previously created interface
-    let children = gameSec.childNodes;
-    while (gameSec.childElementCount>0)
-        gameSec.removeChild(children[0]);
-    arrayTiles = [];
-    for (let row=0; row<nbRows; row++) {
-        let divRow = document.createElement('div');
-        divRow.classList.add('row');
-        gameSec.appendChild(divRow);
-        let rowTiles = [];
-        for (let column=0; column<nbCols; column++) {
-            let divTile = document.createElement('div');
-            divTile.classList.add('tile');
-            divTile.addEventListener('click', event => clickTile(event, [column, row]));
-            divTile.addEventListener('contextmenu', event => flagTile(event, [column, row]));
-            divRow.appendChild(divTile);
-            rowTiles.push(divTile);
-        }
-        arrayTiles.push(rowTiles);
-    }
-}
-
-// give user graphic feedback of the minefield state
-let refreshInterface = function(minefield) {
-    let strRows = minefield.toString().split('\n');
-    for (let y=0; y<strRows.length; y++) {
-        for (let x=0; x<strRows[y].length; x++) {
-            arrayTiles[y][x].innerText = strRows[y][x];
+    // randomly pick nbBombs position where bombs will be located
+    const bombArray = new Array();
+    while (bombArray.length!==nbBombs) {
+        const [posX, posY] = [randInt(width), randInt(height)];
+        if (!eqPos([posX, posY], pos) && !posIn(bombArray, [posX, posY])) {
+            this.bombs[posY][posX] = BOMB;
+            bombArray.push([posX, posY]);
         }
     }
+
+    // for each bomb add one to all neighboors
+    for (const [bombX, bombY] of bombArray)
+        for (const [posX, posY] of this._neighbors([bombX, bombY]))
+            if (this.bombs[posY][posX] !== BOMB)
+                this.bombs[posY][posX]++;
+    this.bombs = this.bombs.map(row => row.map(tile => tile.toString()));
+
+    return this.reveal(pos);
 }
 
-/////////////////////////////////////////////////////////HTML controls
+// Interface for instances of Minefield
 
-let refreshLabel = function(event) {
-    let id = event.target.id;
-    let label = document.querySelector(`label[for=${ id }]`);
-    label.innerText = label.innerText.replace(/\s?\d*$/, ` ${ event.target.value }`);
+// Return a Minefield instance where the view has the given position revealed
+Minefield.prototype.reveal = function([posX, posY]) {
+    if (this.state !== PLAYING)
+        return this;
+
+    const view = this._explore([posX, posY]);
+    if (view[posY][posX]===BOMB)
+        return Minefield.from(this, {state: LOST, view});
+    else
+        return Minefield.from(this, {view});
 }
 
-let initGame = function(event) {
-    rows = Number(rowRange.value);
-    cols = Number(colRange.value);
-    bombs = Math.floor((Number(bombRange.value) / 100) * Number(rowRange.value) * Number(colRange.value));
-    initInterface(rows, cols);
-    clicked = false;
+// Return a Minefield instance where the view has a flag at the given position 
+Minefield.prototype.flag = function([posX, posY]) {
+    if (this.state!==PLAYING)
+        return this;
+
+    const view = Array.from(this.view);
+    let nbFlags = this.nbFlags;
+    let state = this.state;
+    if (this.view[posY][posX]===UNREV) {
+        nbFlags++;
+        view[posY][posX] = FLAG;
+        if (this._checkWin(view, nbFlags))
+            state = WON;
+    }
+    else if (this.view[posY][posX]===FLAG) {
+        nbFlags--;
+        view[posY][posX] = UNREV;
+    }
+    else 
+        return this;
+    return Minefield.from(this, {view, nbFlags, state});
 }
 
-const rowRange = document.querySelector('#rows');
-const colRange = document.querySelector('#cols');
-const bombRange = document.querySelector('#bombs');
-for (let range of [rowRange, colRange, bombRange]) 
-    range.addEventListener('input', refreshLabel);
-const playButton = document.querySelector('#play');
-playButton.addEventListener('click', initGame)
+// "Private" functions of the Minefield prototype
 
-let rows = 0;
-let cols = 0;
-let bombs = 10;
-let clicked = false;
+// Return an array containing all the positions adjacent to the given pos
+Object.defineProperty(Minefield.prototype, '_neighbors', {
+    value: function([posX, posY]) {
+        const locations = new Array();
+        for (let i=-1; i<2; i++)
+            for (let j=-1; j<2; j++)
+                if (posX+i >= 0 && posX+i < this.width &&
+                    posY+j >= 0 && posY+j < this.height &&
+                    (i !== 0 || j !== 0))
+                    locations.push([posX+i, posY+j]);
+        return locations;
+    }
+});
 
-//////////////////////////////////////////////////////////////////Test
+// Return a view array that has been explored around the given position
+Object.defineProperty(Minefield.prototype, '_explore', {
+    value: function([exploreX, exploreY]) {
+        const viewCopy = Array.from(this.view);
+        const locations = [[exploreX, exploreY]];
+        let index = 0;
+        while(index < locations.length) {
+            [exploreX, exploreY] = locations[index]
+            if (viewCopy[exploreY][exploreX] === UNREV) {
+                viewCopy[exploreY][exploreX] = this.bombs[exploreY][exploreX];
+                if (viewCopy[exploreY][exploreX] == 0) {
+                    viewCopy[exploreY][exploreX] = EMPTY;
+                    for (const [posX, posY] of this._neighbors([exploreX, exploreY]))
+                        locations.push([posX, posY]);
+                }
+            }
+            index++;
+        }
+        return viewCopy;
+    }
+});
 
-var minefield;
+// Return true if the all bombs are flaged
+Object.defineProperty(Minefield.prototype, '_checkWin', {
+    value: function(view, nbFlags) {
+        if (nbFlags!==this.nbBombs)
+            return false;
+        for (let row=0; row<this.height; row++)
+            for (let col=0; col<this.width; col++)
+                if (this.bombs[row][col]===BOMB && view[row][col]!==FLAG)
+                    return false;
+        return true;
+    }
+});
+
+// Minefield's own properties
+
+// Return a copy of instance with attributes present in changes updated
+Minefield.from = function(instance, changes={}) {
+    const instance2 = Object.create(Minefield.prototype);
+    for (const attr in instance)
+        instance2[attr] = changes.hasOwnProperty(attr) ? changes[attr] :  instance[attr];
+    return instance2;
+}
+
+
+// Export
+export { Minefield, difficulties };
