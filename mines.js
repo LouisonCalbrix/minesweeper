@@ -49,11 +49,11 @@ const posIn = function(array, pos) {
 //-----------------------------------------------------------Minefield
 
 // default difficulties
-const difficulties = [
-    [9, 9, 10],
-    [14, 16, 40],
-    [16, 30, 99]
-];
+const difficulties = new Map(
+    [['EASY', [9, 9, 10]],
+    ['MEDIUM', [16, 14, 40]],
+    ['HARD', [30, 16, 99]]]
+);
 
 // Special character used to represent flags, bombs and unrevealed positions
 const BOMB = 'X';
@@ -99,6 +99,9 @@ const Minefield = function(width, height, pos, nbBombs) {
                 this.bombs[posY][posX]++;
     this.bombs = this.bombs.map(row => row.map(tile => tile.toString()));
 
+    // debug
+    console.log(this.bombs.map(row => row.join(' ')).join('\n'));
+
     return this.reveal(pos);
 }
 
@@ -139,7 +142,7 @@ Minefield.prototype.flag = function([posX, posY]) {
     return Minefield.from(this, {view, nbFlags, state});
 }
 
-// "Private" functions of the Minefield prototype
+// Private functions of the Minefield prototype
 
 // Return an array containing all the positions adjacent to the given pos
 Object.defineProperty(Minefield.prototype, '_neighbors', {
@@ -190,7 +193,7 @@ Object.defineProperty(Minefield.prototype, '_checkWin', {
     }
 });
 
-// Minefield's own properties
+// Function property of Minefield
 
 // Return a copy of instance with attributes present in changes updated
 Minefield.from = function(instance, changes={}) {
@@ -202,4 +205,4 @@ Minefield.from = function(instance, changes={}) {
 
 
 // Export
-export { Minefield, difficulties };
+export { Minefield, difficulties, UNREV, FLAG, BOMB, EMPTY, PLAYING, LOST, WON };
