@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
 html {
   box-sizing: border-box;
 }
@@ -12,39 +14,72 @@ body {
 #app {
   box-sizing: content-box;
   display: grid;
-  background: linear-gradient(to bottom, #00FF, #0000 25%, #0000 75%, #00FF), black;
+  background: radial-gradient(#0000, #FD09);
+  background-color: white;
   margin: 1em;
   border-radius: 2.6em;
   grid-gap: 1em 0em;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   width: max-content;
   padding: 1.3em;
 }
 
 /* style for radio-button group, aka the picker */
-.picker {
+#picker {
+  font-size: 1.2em;
+  box-sizing: border-box;
   display: flex;
+  justify-self: center;
+  width: 15em;
   justify-content: space-evenly;
-  grid-column: 3 / 6;
+  grid-column: 1 / 4;
 }
 .radio-button {
-  background-color: #F00;
-  color: #0000;
-  width: 3em;
-  height: 2em;
-  overflow: hidden;
+  font-family: VT323, mono;
+  background-color: #EEE;
+  width: 4.2em;
 }
 .radio-button input {
-  margin: 0;
-  height: 100%;
+  display: none;
+}
+.radio-button label {
+  border: 0.3em outset black;
+  display: block;
+  text-align: center;
+  padding: 0.6em 0;
   width: 100%;
-  opacity: 0;
+  height: 100%;
+}
+.radio-button:active label,
+.radio-button input:checked + label {
+  background-color: #AAA;
+  border-style: inset;
 }
 
 /* style for the reset button */
 #reset-button {
+  justify-self: center;
+  box-sizing: border-box;
+  width: 3.2em;
+  height: 3.2em;
+  border: .3em outset black;
+  background-image: url("resources/sun-normal.png");
+  background-size: 80%;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: #EEE;
   grid-row: 2;
-  grid-column: 4;
+  grid-column: 2;
+}
+#reset-button.reset-lost {
+  background-image: url("resources/sun-lose.png");
+}
+#reset-button.reset-won {
+  background-image: url("resources/sun-win.png");
+}
+#reset-button:active {
+  background-color: #CCC;
+  border: .3em inset black;
 }
 
 /* style for the game area */
@@ -54,12 +89,12 @@ body {
 #game {
   justify-self: center;
   grid-row: 3;
-  grid-column: 1 / 8;
+  grid-column: 1 / 4;
 }
 .mines-row {
   display: flex;
 }
-.mines-row div {
+.mines-row span {
   background-color: #EEE;
   width: 1.4em;
   height: 1.4em;
@@ -71,8 +106,18 @@ body {
   color: #0000;
 }
 .mines-row .tile-bomb {
-  background-color: #F22;
+  background-image: url("resources/mine.png");
+  background-size: 80%;
+  background-position: center;
+  background-repeat: no-repeat;
+  color: #0000;
+  background-color: #D66;
 }
 .mines-row .tile-flag {
-  background-color: #66F;
+  background-image: url("resources/flag2.png");
+  background-size: 80%;
+  background-position: center;
+  background-repeat: no-repeat;
+  color: #0000;
+  background-color: #88F;
 }
