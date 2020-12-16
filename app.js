@@ -1,127 +1,31 @@
 "use strict";
 
-import { Minefield, difficulties } from './mines.js';
-
-function _slicedToArray(arr, i) {
-  return (
-    _arrayWithHoles(arr) ||
-    _iterableToArrayLimit(arr, i) ||
-    _unsupportedIterableToArray(arr, i) ||
-    _nonIterableRest()
-  );
-}
-
-function _nonIterableRest() {
-  throw new TypeError(
-    "Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."
-  );
-}
-
-function _unsupportedIterableToArray(o, minLen) {
-  if (!o) return;
-  if (typeof o === "string") return _arrayLikeToArray(o, minLen);
-  var n = Object.prototype.toString.call(o).slice(8, -1);
-  if (n === "Object" && o.constructor) n = o.constructor.name;
-  if (n === "Map" || n === "Set") return Array.from(o);
-  if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n))
-    return _arrayLikeToArray(o, minLen);
-}
-
-function _arrayLikeToArray(arr, len) {
-  if (len == null || len > arr.length) len = arr.length;
-  for (var i = 0, arr2 = new Array(len); i < len; i++) {
-    arr2[i] = arr[i];
-  }
-  return arr2;
-}
-
-function _iterableToArrayLimit(arr, i) {
-  if (typeof Symbol === "undefined" || !(Symbol.iterator in Object(arr)))
-    return;
-  var _arr = [];
-  var _n = true;
-  var _d = false;
-  var _e = undefined;
-  try {
-    for (
-      var _i = arr[Symbol.iterator](), _s;
-      !(_n = (_s = _i.next()).done);
-      _n = true
-    ) {
-      _arr.push(_s.value);
-      if (i && _arr.length === i) break;
-    }
-  } catch (err) {
-    _d = true;
-    _e = err;
-  } finally {
-    try {
-      if (!_n && _i["return"] != null) _i["return"]();
-    } finally {
-      if (_d) throw _e;
-    }
-  }
-  return _arr;
-}
-
-function _arrayWithHoles(arr) {
-  if (Array.isArray(arr)) return arr;
-}
-
-function _objectWithoutProperties(source, excluded) {
-  if (source == null) return {};
-  var target = _objectWithoutPropertiesLoose(source, excluded);
-  var key, i;
-  if (Object.getOwnPropertySymbols) {
-    var sourceSymbolKeys = Object.getOwnPropertySymbols(source);
-    for (i = 0; i < sourceSymbolKeys.length; i++) {
-      key = sourceSymbolKeys[i];
-      if (excluded.indexOf(key) >= 0) continue;
-      if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue;
-      target[key] = source[key];
-    }
-  }
-  return target;
-}
-
-function _objectWithoutPropertiesLoose(source, excluded) {
-  if (source == null) return {};
-  var target = {};
-  var sourceKeys = Object.keys(source);
-  var key, i;
-  for (i = 0; i < sourceKeys.length; i++) {
-    key = sourceKeys[i];
-    if (excluded.indexOf(key) >= 0) continue;
-    target[key] = source[key];
-  }
-  return target;
-}
-
+import * as mines from "./mines.js";
 /* Picker component:
+ * Return a group of radio buttons
+ * Expected props:
+ *  -name: the html name for the group of radio buttons
+ *  -description: a sequence of strings that each describes an option in the group
+ *  -picked:
  * Given an array choices of {choice, description} and an index picked, it builds
  * a list of radio button to chose an option from. A function onChange is also
  * expected to be passed, which will be called by the selected radio button with
  * its index in choice as an argument. (the radio button for choice[i] will call
  * onChange(i))
  */
-var Picker = function Picker(_ref) {
-  var name = _ref.name,
-    descriptions = _ref.descriptions,
-    picked = _ref.picked,
-    _onChange = _ref.onChange,
-    buttonClass = _ref.buttonClass,
-    rest = _objectWithoutProperties(_ref, [
-      "name",
-      "descriptions",
-      "picked",
-      "onChange",
-      "buttonClass"
-    ]);
 
+const Picker = function ({
+  name,
+  descriptions,
+  defaultPick,
+  onChange,
+  buttonClass,
+  ...rest
+}) {
   return /*#__PURE__*/ React.createElement(
     "div",
     rest,
-    descriptions.map(function (description, i) {
+    descriptions.map((description, i) => {
       return /*#__PURE__*/ React.createElement(
         "span",
         {
@@ -130,17 +34,15 @@ var Picker = function Picker(_ref) {
         /*#__PURE__*/ React.createElement("input", {
           type: "radio",
           name: name,
-          value: i,
-          id: "".concat(name, "-").concat(description),
-          onChange: function onChange() {
-            return _onChange(i);
-          },
-          checked: i === picked
+          value: description,
+          id: `${name}-${description}`,
+          defaultChecked: i === defaultPick,
+          onChange: () => onChange(description, i)
         }),
         /*#__PURE__*/ React.createElement(
           "label",
           {
-            htmlFor: "".concat(name, "-").concat(description)
+            htmlFor: `${name}-${description}`
           },
           description
         )
@@ -148,197 +50,199 @@ var Picker = function Picker(_ref) {
     })
   );
 };
-/* ResetButton component:
- * Can be clicked to reset the game, it also indicates whether the player
- * has won or lost.
+/* Return the value of the radio button checked in the group of radio buttons
+ * that if named groupName.
  */
 
-var SUN_WIN = "won";
-var SUN_LOSE = "lost";
-var SUN_NORMAL = "normal";
+const checkedRadio = function (groupName) {
+  const grp = document.querySelectorAll(`input[name=${groupName}`);
 
-var ResetButton = function ResetButton(_ref2) {
-  var gameState = _ref2.gameState,
-    onClick = _ref2.onClick;
-  return /*#__PURE__*/ React.createElement("button", {
-    id: "reset",
-    className: "sun-".concat(gameState),
-    onClick: onClick,
-    alt: "click here to reset game"
-  });
-};
-/* Mineview component:
- *
+  for (const node of grp) if (node.checked) return node.value;
+
+  throw new Error(`no radio group of name ${groupName}`);
+}; //----------------------------------------Matrix component and related
+
+/* Matrix component
+ * Return a table-like element where every cell is an element created by calling
+ * the cellComponent function with an element of the array as argument.
  */
 
-var BOMB = "X";
-var FLAG = "P";
-var UNREV = ".";
-var tileClasses = new Map([
-  [UNREV, "tile-unrevealed"],
-  [BOMB, "tile-bomb"],
-  [FLAG, "tile-flag"]
-]);
-
-var Row = function Row(_ref3) {
-  var rowArray = _ref3.rowArray,
-    y = _ref3.y,
-    _onClick = _ref3.onClick,
-    _onContextMenu = _ref3.onContextMenu;
+const Matrix = function ({
+  array,
+  onClick,
+  onContextMenu,
+  rowClass,
+  cellComponent,
+  ...rest
+}) {
   return /*#__PURE__*/ React.createElement(
     "div",
-    {
-      className: "mines-row"
-    },
-    rowArray.map(function (tile, x) {
-      return /*#__PURE__*/ React.createElement(
-        "div",
-        {
-          onClick: function onClick() {
-            return _onClick(x, y);
-          },
-          onContextMenu: function onContextMenu(evt) {
-            evt.preventDefault();
-
-            _onContextMenu(x, y);
-          },
-          className: tileClasses.get(tile)
-        },
-        tile
-      );
-    })
-  );
-};
-
-var Mineview = function Mineview(_ref4) {
-  var minefield = _ref4.minefield,
-    width = _ref4.width,
-    height = _ref4.height,
-    onClick = _ref4.onClick,
-    onContextMenu = _ref4.onContextMenu;
-  var view = minefield
-    ? minefield.view
-    : Array(height).fill(Array(width).fill(UNREV));
-  return /*#__PURE__*/ React.createElement(
-    "div",
-    {id: 'game'},
-    view.map(function (row, y) {
+    rest,
+    array.map((row, y) => {
       return /*#__PURE__*/ React.createElement(Row, {
+        className: rowClass,
+        row: row,
         y: y,
-        rowArray: row,
         onClick: onClick,
-        onContextMenu: onContextMenu
+        onContextMenu: onContextMenu,
+        cellComponent: cellComponent
       });
     })
   );
+}; // Row component meant to be used by the Matrix component to build its rows.
+
+const Row = function ({
+  row,
+  y,
+  onClick,
+  onContextMenu,
+  cellComponent,
+  ...rest
+}) {
+  return /*#__PURE__*/ React.createElement(
+    "div",
+    rest,
+    row.map((cell, x) =>
+      cellComponent({
+        x,
+        y,
+        onClick,
+        onContextMenu,
+        cell
+      })
+    )
+  );
+}; // Map to determine the css class of a cell based on its value
+
+const cellClasses = new Map([
+  [mines.UNREV, "tile-unrevealed"],
+  [mines.BOMB, "tile-bomb"],
+  [mines.FLAG, "tile-flag"]
+]); // Cell component for the Minesweeper game
+
+const mineCell = function ({ x, y, onClick, onContextMenu, cell }) {
+  let className = cellClasses.get(cell);
+  return /*#__PURE__*/ React.createElement(
+    "span",
+    {
+      className: className,
+      onClick: () => onClick(x, y),
+      onContextMenu: (evt) => {
+        evt.preventDefault();
+        onContextMenu(x, y);
+      }
+    },
+    cell
+  );
+}; //-------------------------------------------App component and related
+// Dummy minefield used when the game hasn't started yet
+
+const DUMMY = "du";
+
+const dummyMinefield = function ([width, height, _]) {
+  return {
+    view: Array(height).fill(Array(width).fill(mines.UNREV)),
+    state: DUMMY
+  };
 }; // App component
 
-var App = function App(props) {
+const App = function (props) {
   React.Component.call(this, props);
+  Object.defineProperty(this, "difficulty", {
+    enumerable: true,
+    get: function () {
+      return checkedRadio("difficulty");
+    }
+  });
   this.state = {
-    difficulty: 0,
-    minefield: undefined,
-    started: false
+    minefield: dummyMinefield(mines.difficulties.get(descriptions[1]))
   };
 };
 
 App.prototype = Object.create(React.Component.prototype);
-App.prototype.constructor = App;
+App.prototype.constructor = App; // Change the difficulty picked
 
-App.prototype.mineviewLeftClick = function (i, j) {
-  if (!this.state.started) {
-    var _difficulties$this$st = _slicedToArray(
-        difficulties[this.state.difficulty],
-        3
-      ),
-      height = _difficulties$this$st[0],
-      width = _difficulties$this$st[1],
-      bombs = _difficulties$this$st[2];
+App.prototype.changeDifficulty = function () {
+  this.setState({
+    minefield: dummyMinefield(mines.difficulties.get(this.difficulty))
+  });
+}; // Reset the on-going game of minesweeper
 
-    var minefield = new Minefield(width, height, [i, j], bombs);
+App.prototype.resetGame = function () {
+  this.setState({
+    minefield: dummyMinefield(mines.difficulties.get(this.difficulty))
+  });
+}; // Handle click events on the Matrix component that represents the minefield
+
+/* Handle left click events
+ * Reveal the minefield's cell at coordinates x, y if the minefield is not a dummy.
+ * Create a minefield otherwise
+ */
+
+App.prototype.mineviewLeftClick = function (x, y) {
+  if (this.state.minefield.state === DUMMY) {
+    const [width, height, bombs] = mines.difficulties.get(this.difficulty);
+    const minefield = new mines.Minefield(width, height, [x, y], bombs);
     this.setState({
-      minefield: minefield,
-      started: true
+      minefield
     });
   } else {
-    var _minefield = this.state.minefield.reveal([i, j]);
-
+    const minefield = this.state.minefield.reveal([x, y]);
     this.setState({
-      minefield: _minefield
+      minefield
     });
   }
 };
+/* Handle right click events
+ * Flag the minefield's cell at coordinates x, y if the minefield is not a dummy.
+ */
 
-App.prototype.mineviewRightClick = function (i, j) {
-  if (this.state.started) {
-    var minefield = this.state.minefield.flag([i, j]);
+App.prototype.mineviewRightClick = function (x, y) {
+  if (this.state.minefield.state !== DUMMY) {
+    const minefield = this.state.minefield.flag([x, y]);
     this.setState({
-      minefield: minefield
+      minefield
     });
   }
-};
+}; // labels for the difficulty settings
+
+const descriptions = Array.from(mines.difficulties.keys()); // Map to determine the reset button css class depending on the minefield state
+
+const resetClasses = new Map([
+  [mines.WON, "reset-won"],
+  [mines.LOST, "reset-lost"],
+  [mines.PLAYING, "reset-normal"]
+]);
 
 App.prototype.render = function () {
-  var _this = this;
-
-  var descriptions = ["EASY", "MEDIUM", "HARD"];
-  var picked = this.state.difficulty;
-
-  var _difficulties$picked = _slicedToArray(difficulties[picked], 3),
-    height = _difficulties$picked[0],
-    width = _difficulties$picked[1],
-    bombs = _difficulties$picked[2];
-
-  var minefield = this.state.minefield;
-  var resetButtonClass = "sun-normal";
-
-  if (minefield !== undefined) {
-    if (minefield.win)
-      resetButtonClass = resetButtonClass.replace("normal", "won");
-    else if (minefield.gameOver)
-      resetButtonClass = resetButtonClass.replace("normal", "lost");
-  }
-
+  const minefield = this.state.minefield;
+  let resetButtonClass = resetClasses.get(minefield.state);
   return /*#__PURE__*/ React.createElement(
     "div",
     {
       id: "app"
     },
     /*#__PURE__*/ React.createElement(Picker, {
-      className: 'picker',
+      id: "picker",
       descriptions: descriptions,
       name: "difficulty",
-      picked: picked,
-      onChange: function onChange(i) {
-        return _this.setState({
-          difficulty: i,
-          started: false,
-          minefield: undefined
-        });
-      },
+      defaultPick: 1,
+      onChange: () => this.changeDifficulty(),
       buttonClass: "radio-button"
     }),
     /*#__PURE__*/ React.createElement("button", {
-      onClick: function onClick() {
-        return _this.setState({
-          started: false,
-          minefield: undefined
-        });
-      },
-      id: 'reset-button',
+      id: "reset-button",
       className: resetButtonClass,
+      onClick: () => this.resetGame(),
       alt: "button to reset the game"
     }),
-    /*#__PURE__*/ React.createElement(Mineview, {
-      width: width,
-      height: height,
-      minefield: minefield,
-      onClick: function onClick(i, j) {
-        return _this.mineviewLeftClick(i, j);
-      },
-      onContextMenu: function onContextMenu(i, j) {
-        return _this.mineviewRightClick(i, j);
-      }
+    /*#__PURE__*/ React.createElement(Matrix, {
+      id: "game",
+      array: minefield.view,
+      rowClass: "mines-row",
+      onClick: (x, y) => this.mineviewLeftClick(x, y),
+      onContextMenu: (x, y) => this.mineviewRightClick(x, y),
+      cellComponent: mineCell
     })
   );
 };
@@ -347,4 +251,3 @@ ReactDOM.render(
   /*#__PURE__*/ React.createElement(App, null),
   document.querySelector("#root")
 );
-
