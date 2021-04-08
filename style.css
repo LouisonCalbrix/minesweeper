@@ -14,10 +14,8 @@ body {
 #app {
   box-sizing: content-box;
   display: grid;
-  background: radial-gradient(#0000, #FD09);
-  background-color: white;
+  background-color: ivory;
   margin: 1em;
-  border-radius: 2.6em;
   grid-gap: 1em 0em;
   grid-template-columns: repeat(3, 1fr);
   width: max-content;
@@ -36,14 +34,14 @@ body {
 }
 .radio-button {
   font-family: VT323, mono;
-  background-color: #EEE;
+  background-color: gainsboro;
   width: 4.2em;
 }
 .radio-button input {
   display: none;
 }
 .radio-button label {
-  border: 0.3em outset black;
+  border: 0.3em outset silver;
   display: block;
   text-align: center;
   padding: 0.6em 0;
@@ -52,7 +50,7 @@ body {
 }
 .radio-button:active label,
 .radio-button input:checked + label {
-  background-color: #AAA;
+  background-color: darkgrey;
   border-style: inset;
 }
 
@@ -62,12 +60,12 @@ body {
   box-sizing: border-box;
   width: 3.2em;
   height: 3.2em;
-  border: .3em outset black;
+  border: .3em outset silver;
   background-image: url("resources/sun-normal.png");
   background-size: 80%;
   background-repeat: no-repeat;
   background-position: center;
-  background-color: #EEE;
+  background-color: gainsboro;
   grid-row: 2;
   grid-column: 2;
 }
@@ -78,8 +76,8 @@ body {
   background-image: url("resources/sun-win.png");
 }
 #reset-button:active {
-  background-color: #CCC;
-  border: .3em inset black;
+  background-color: darkgrey;
+  border-style: inset;
 }
 
 /* style for the game area */
@@ -95,29 +93,32 @@ body {
   display: flex;
 }
 .mines-row span {
-  background-color: #EEE;
+  background-color: gainsboro;
   width: 1.4em;
   height: 1.4em;
-  border: 1px solid #8885;
+  border: 1px solid silver;
+  color: black;
   text-align: center;
 }
+.mines-row .tile-unrevealed,
+.mines-row .tile-bomb,
+.mines-row .tile-flag {
+    color: #0000;
+}
 .mines-row .tile-unrevealed {
-  border: 0.2em outset black;
-  color: #0000;
+  border: 0.2em outset silver;
 }
 .mines-row .tile-bomb {
   background-image: url("resources/mine.png");
   background-size: 80%;
   background-position: center;
   background-repeat: no-repeat;
-  color: #0000;
-  background-color: #D66;
+  background-color: lightcoral;
 }
 .mines-row .tile-flag {
   background-image: url("resources/flag2.png");
   background-size: 80%;
   background-position: center;
   background-repeat: no-repeat;
-  color: #0000;
-  background-color: #88F;
+  background-color: cornflowerblue;
 }
