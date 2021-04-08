@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
+/* global/page-wide settings */
 html {
   box-sizing: border-box;
 }
@@ -9,17 +10,29 @@ html {
 body {
   font-family: Helvetica, Arial;
   margin: 0;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  background-color: ivory;
 }
 
+/* app specific style */
+/* container for whole the app */
 #app {
   box-sizing: content-box;
   display: grid;
-  background-color: ivory;
   margin: 1em;
   grid-gap: 1em 0em;
   grid-template-columns: repeat(3, 1fr);
   width: max-content;
   padding: 1.3em;
+}
+
+/* common style for main units/components of the app */
+#picker span,
+#reset-button,
+#game {
+    box-shadow: 6px 6px black;
 }
 
 /* style for radio-button group, aka the picker */
