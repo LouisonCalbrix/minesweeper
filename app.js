@@ -1,17 +1,16 @@
-"use strict";
-
 import * as mines from "./mines.js";
 /* Picker component:
- * Return a group of radio buttons
+ * Return a group of radio buttons.
  * Expected props:
- *  -name: the html name for the group of radio buttons
- *  -description: a sequence of strings that each describes an option in the group
- *  -picked:
- * Given an array choices of {choice, description} and an index picked, it builds
- * a list of radio button to chose an option from. A function onChange is also
- * expected to be passed, which will be called by the selected radio button with
- * its index in choice as an argument. (the radio button for choice[i] will call
- * onChange(i))
+ *      - name: the html name for the group of radio buttons
+ *      - descriptions: a sequence of strings that each describes an option in the
+ *          group
+ *      - defaultPick: the index of the description for the default option picked
+ *      - onChange: a function called when the radio button checked changes, this
+ *          function can take as an argument an object of the form
+ *          { description, indexOfDescription }
+ *      - radioClass: the class name for every option of the Picker
+ * Additional props will be attached to the wrapping div.
  */
 
 const Picker = function ({
@@ -19,7 +18,7 @@ const Picker = function ({
   descriptions,
   defaultPick,
   onChange,
-  buttonClass,
+  radioClass,
   ...rest
 }) {
   return /*#__PURE__*/ React.createElement(
@@ -29,7 +28,7 @@ const Picker = function ({
       return /*#__PURE__*/ React.createElement(
         "span",
         {
-          className: buttonClass
+          className: radioClass
         },
         /*#__PURE__*/ React.createElement("input", {
           type: "radio",
@@ -37,7 +36,11 @@ const Picker = function ({
           value: description,
           id: `${name}-${description}`,
           defaultChecked: i === defaultPick,
-          onChange: () => onChange(description, i)
+          onChange: () =>
+            onChange({
+              description,
+              i
+            })
         }),
         /*#__PURE__*/ React.createElement(
           "label",
@@ -51,7 +54,8 @@ const Picker = function ({
   );
 };
 /* Return the value of the radio button checked in the group of radio buttons
- * that if named groupName.
+ * that is named groupName.
+ * Will throw an error if no such group is found.
  */
 
 const checkedRadio = function (groupName) {
@@ -62,16 +66,24 @@ const checkedRadio = function (groupName) {
   throw new Error(`no radio group of name ${groupName}`);
 }; //----------------------------------------Matrix component and related
 
-/* Matrix component
- * Return a table-like element where every cell is an element created by calling
- * the cellComponent function with an element of the array as argument.
+/* Matrix component:
+ * Return a table-like element.
+ * Expected props:
+ *      - array: the 2D array that must be translated into a pseudo-table
+ *      - rowClass: the class name for every row in the Matrix
+ *      - onClick, onContextMenu: functions to be called when a cell of the
+ *          Matrix is respectively left-clicked or right-clicked
+ *      - cellComponent: a component to be instanciated for every cell of the
+ *          given 2D array. Such a component should accept props of the form
+ *          { cell, x, y, onClick, onContextMenu }
+ * Additional props will be attached to the wrapping div.
  */
 
 const Matrix = function ({
   array,
+  rowClass,
   onClick,
   onContextMenu,
-  rowClass,
   cellComponent,
   ...rest
 }) {
@@ -89,7 +101,20 @@ const Matrix = function ({
       });
     })
   );
-}; // Row component meant to be used by the Matrix component to build its rows.
+};
+/* Row component:
+ * Return a flat sequence of cells. This component is meant to be instanciated
+ * by the Matrix component.
+ * Expected props:
+ *      - row: the flat (1D) array that must be translated into a Row
+ *      - y: the number of the Row in the Matrix
+ *      - onClick, onContextMenu: functions to be called when a cell of the
+ *          Row is respectively left-clicked or right-clicked
+ *      - cellComponent: a component to be instanciated for every cell of the
+ *          given 2D array. Such a component should accept props of the form
+ *          { cell, x, y, onClick, onContextMenu }
+ * Additional props will be attached to the wrapping div.
+ */
 
 const Row = function ({
   row,
@@ -112,7 +137,7 @@ const Row = function ({
       })
     )
   );
-}; // Map to determine the css class of a cell based on its value
+}; // Map to determine the CSS class of a cell based on its value
 
 const cellClasses = new Map([
   [mines.UNREV, "tile-unrevealed"],
@@ -228,7 +253,7 @@ App.prototype.render = function () {
       name: "difficulty",
       defaultPick: 1,
       onChange: () => this.changeDifficulty(),
-      buttonClass: "radio-button"
+      radioClass: "radio-button"
     }),
     /*#__PURE__*/ React.createElement("button", {
       id: "reset-button",
