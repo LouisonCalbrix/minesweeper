@@ -29,7 +29,7 @@ body {
 }
 
 /* common style for main units/components of the app */
-#picker span,
+.radio-button input:checked + label,
 #reset-button,
 #game {
     box-shadow: 6px 6px black;
@@ -47,24 +47,25 @@ body {
 }
 .radio-button {
   font-family: VT323, mono;
-  background-color: gainsboro;
   width: 4.2em;
+  transition: .3s;
 }
 .radio-button input {
   display: none;
 }
 .radio-button label {
-  border: 0.3em outset silver;
+  border: 1px solid black;
+  background-color: gainsboro;
   display: block;
   text-align: center;
   padding: 0.6em 0;
   width: 100%;
   height: 100%;
+  transform: translate(3px, 3px);
+  transition: .3s;
 }
-.radio-button:active label,
 .radio-button input:checked + label {
-  background-color: darkgrey;
-  border-style: inset;
+  transform: translate(0);
 }
 
 /* style for the reset button */
@@ -73,7 +74,7 @@ body {
   box-sizing: border-box;
   width: 3.2em;
   height: 3.2em;
-  border: .3em outset silver;
+  border: 1px solid black;
   background-image: url("resources/sun-normal.png");
   background-size: 80%;
   background-repeat: no-repeat;
@@ -81,6 +82,7 @@ body {
   background-color: gainsboro;
   grid-row: 2;
   grid-column: 2;
+  transition: .2s;
 }
 #reset-button.reset-lost {
   background-image: url("resources/sun-lose.png");
@@ -89,8 +91,8 @@ body {
   background-image: url("resources/sun-win.png");
 }
 #reset-button:active {
-  background-color: darkgrey;
-  border-style: inset;
+  transform: translate(3px, 3px);
+  box-shadow: 0 0;
 }
 
 /* style for the game area */
@@ -106,10 +108,12 @@ body {
   display: flex;
 }
 .mines-row span {
+  user-select: none;
+  display: inline-block;
   background-color: gainsboro;
   width: 1.4em;
   height: 1.4em;
-  border: 1px solid silver;
+  border: .2em solid gainsboro;
   color: black;
   text-align: center;
 }
@@ -127,6 +131,7 @@ body {
   background-position: center;
   background-repeat: no-repeat;
   background-color: lightcoral;
+  border-color: lightcoral;
 }
 .mines-row .tile-flag {
   background-image: url("resources/flag2.png");
@@ -134,4 +139,5 @@ body {
   background-position: center;
   background-repeat: no-repeat;
   background-color: cornflowerblue;
+  border-color: cornflowerblue;
 }
